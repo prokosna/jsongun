@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"sync"
-	"time"
 )
 
 type Parser struct {
@@ -16,13 +15,12 @@ type Parser struct {
 	FilePath   string
 }
 
-func (p *Parser) FetchJsonFromFile(ctx context.Context, wg *sync.WaitGroup, q chan string, logCh chan string) {
-	defer wg.Done()
+func (p *Parser) readAndParse(ctx context.Context, q chan string, logCh chan string) bool {
 	fp, err := os.Open(p.FilePath)
 	if err != nil {
 		p.ErrorCount = -1
 		logCh <- fmt.Sprintf("ERROR: Cannot open %s", p.FilePath)
-		return
+		return false
 	}
 	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
@@ -30,9 +28,9 @@ func (p *Parser) FetchJsonFromFile(ctx context.Context, wg *sync.WaitGroup, q ch
 	for scanner.Scan() {
 		select {
 		case <-ctx.Done():
-			return
+			return true
 		default:
-			time.Sleep(5 * time.Millisecond)
+			// time.Sleep(5 * time.Millisecond)
 			c += 1
 			s := scanner.Text()
 			var js interface{}
@@ -49,6 +47,17 @@ func (p *Parser) FetchJsonFromFile(ctx context.Context, wg *sync.WaitGroup, q ch
 	if scanner.Err() != nil {
 		logCh <- fmt.Sprintf("ERROR: Cannot read to end. %s", p.FilePath)
 		p.ErrorCount = -1
+	}
+	return false
+}
+
+func (p *Parser) FetchJsonFromFile(ctx context.Context, wg *sync.WaitGroup, q chan string, logCh chan string, r int) {
+	defer wg.Done()
+	for i := 0; i < r; i++ {
+		canceled := p.readAndParse(ctx, q, logCh)
+		if canceled {
+			return
+		}
 	}
 	return
 }

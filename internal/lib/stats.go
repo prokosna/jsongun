@@ -239,7 +239,7 @@ func printStats(s Stats) {
 		"From",
 		"To",
 		"Duration[s]",
-		"OK",
+		"OK(/sec)",
 		"NG",
 		"2xx(R[%])",
 		"3xx(R[%])",
@@ -256,11 +256,11 @@ func printStats(s Stats) {
 	column := strings.Join(columns, "\t")
 	fmt.Fprint(tables, column+"\n")
 	fmt.Fprintf(tables,
-		"%s\t%s\t%6.3f\t%d\t%d\t%s\t%s\t%s\t%s\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\n",
+		"%s\t%s\t%6.1f\t%s\t%d\t%s\t%s\t%s\t%s\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\n",
 		s.beginTime.Format("15:04:05"),
 		s.endTime.Format("15:04:05"),
 		s.durationSec,
-		s.successCount,
+		fmt.Sprintf("%d(%.2f/sec)", s.successCount, float64(s.successCount)/s.durationSec),
 		s.errorCount,
 		fmt.Sprintf("%d(%4.1f)", s.status2xxCount, float64(s.status2xxCount)/float64(s.successCount)*100),
 		fmt.Sprintf("%d(%4.1f)", s.status3xxCount, float64(s.status3xxCount)/float64(s.successCount)*100),

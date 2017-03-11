@@ -22,6 +22,7 @@ func main() {
 				Ui: &cli.ColoredUi{
 					Ui:          ui,
 					OutputColor: cli.UiColorCyan,
+					ErrorColor:  cli.UiColorRed,
 				},
 			}, nil
 		},
