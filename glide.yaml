@@ -1,2 +1,4 @@
 package: github.com/prokosna/jsongun
-import: []
+import:
+- package: github.com/buger/goterm
+- package: github.com/mitchellh/cli

@@ -1,12 +1,13 @@
-package jsongun
+package lib
 
 import (
-	"context"
-	"sync"
-	"os"
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"sync"
+	"time"
 )
 
 type Parser struct {
@@ -21,7 +22,7 @@ func (p *Parser) FetchJsonFromFile(ctx context.Context, wg *sync.WaitGroup, q ch
 	if err != nil {
 		p.ErrorCount = -1
 		logCh <- fmt.Sprintf("ERROR: Cannot open %s", p.FilePath)
-		return;
+		return
 	}
 	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
@@ -31,7 +32,8 @@ func (p *Parser) FetchJsonFromFile(ctx context.Context, wg *sync.WaitGroup, q ch
 		case <-ctx.Done():
 			return
 		default:
-			c += 1;
+			time.Sleep(5 * time.Millisecond)
+			c += 1
 			s := scanner.Text()
 			var js interface{}
 			if json.Unmarshal([]byte(s), &js) == nil {

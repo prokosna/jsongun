@@ -1,7 +1,7 @@
-package jsongun
+package lib
 
 type Metrics struct {
 	StatusCode string
-	Latency    float32
+	Latency    float64
 	IsError    bool
 }
