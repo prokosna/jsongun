@@ -41,23 +41,19 @@ var cmdFlags *flag.FlagSet
 var cfg *Config
 
 const (
-	filePathListDefault = "[magazine.json]"
-	filePathListDesc    = "Files include lines of JSON. Each JSON should be written in one line."
-	uriDefault          = "http://localhost:8081/"
-	uriDesc             = "Target URI such as http://localhost:80/"
-	numShooterDefault   = 1
-	numShooterDesc      = "The number of threads to request"
-	repeatDefault       = 1
-	repeatDesc          = "The number of iteration for one file"
-	sleepDefault        = 0
-	sleepDesc           = "Interval time between requests"
+	uriDefault        = "http://localhost:8081/"
+	uriDesc           = "Target URI"
+	numShooterDefault = 1
+	numShooterDesc    = "The number of threads to request"
+	repeatDefault     = 1
+	repeatDesc        = "The number of iteration for each file"
+	sleepDefault      = 0
+	sleepDesc         = "Interval between requests (milliseconds)"
 )
 
 func init() {
 	cfg = &Config{}
 	cmdFlags = flag.NewFlagSet("fire", flag.ContinueOnError)
-	cmdFlags.Var(&cfg.filePathList, "file", filePathListDesc)
-	cmdFlags.Var(&cfg.filePathList, "f", filePathListDesc)
 	cmdFlags.StringVar(&cfg.uri, "uri", uriDefault, uriDesc)
 	cmdFlags.StringVar(&cfg.uri, "u", uriDefault, uriDesc)
 	cmdFlags.IntVar(&cfg.numShooter, "num-shooters", numShooterDefault, numShooterDesc)
@@ -75,14 +71,15 @@ func (c *FireCommand) Run(args []string) int {
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
 	}
+	cfg.filePathList = cmdFlags.Args()
 	if cfg.numShooter <= 0 {
 		c.Ui.Error("Please specify the number of shooter not less than 1")
 		return 1
 	}
 	if len(cfg.filePathList) <= 0 {
-		cfg.filePathList = []string{"magazine.json"}
+		c.Ui.Error("Please specify the JSON files")
+		return 1
 	}
-
 	if cfg.uri == uriDefault {
 		a, err := c.Ui.Ask("Default target 'http://localhost:8081/' will be used. OK? [y/n]")
 		if strings.ToLower(a) == "n" || err != nil {
@@ -153,10 +150,9 @@ func (c *FireCommand) Run(args []string) int {
 }
 
 func (c *FireCommand) Help() string {
-	text := fmt.Sprintln("Usage: jsongun fire [options...]")
+	text := fmt.Sprintln("Usage: jsongun fire [options] FILES...")
 	opt := fmt.Sprintln("Options:")
 	args := make([]string, 5)
-	args[0] = fmt.Sprintf("  %s, %s\n\t%s [%s]\n", "-f", "--file", filePathListDesc, filePathListDefault)
 	args[1] = fmt.Sprintf("  %s, %s\n\t%s [%s]\n", "-u", "--uri", uriDesc, uriDefault)
 	args[2] = fmt.Sprintf("  %s, %s\n\t%s [%d]\n", "-n", "--num-shooters", numShooterDesc, numShooterDefault)
 	args[3] = fmt.Sprintf("  %s, %s\n\t%s [%d]\n", "-r", "--repeat", repeatDesc, repeatDefault)

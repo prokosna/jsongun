@@ -172,12 +172,12 @@ func calculateStats(begin time.Time, end time.Time, a *Accum, r *Result) {
 	// calc window percentile
 	if l := len(a.reqLatency); l > 0 {
 		sort.Float64s(a.reqLatency)
-		r.window.reqLatencyP10 = a.reqLatency[int(math.Ceil(float64(l) * 0.1) - 1)]
-		r.window.reqLatencyP50 = a.reqLatency[int(math.Ceil(float64(l) * 0.5) - 1)]
-		r.window.reqLatencyP90 = a.reqLatency[int(math.Ceil(float64(l) * 0.9) - 1)]
-		r.window.reqLatencyP99 = a.reqLatency[int(math.Ceil(float64(l) * 0.99) - 1)]
+		r.window.reqLatencyP10 = a.reqLatency[int(math.Ceil(float64(l)*0.1)-1)]
+		r.window.reqLatencyP50 = a.reqLatency[int(math.Ceil(float64(l)*0.5)-1)]
+		r.window.reqLatencyP90 = a.reqLatency[int(math.Ceil(float64(l)*0.9)-1)]
+		r.window.reqLatencyP99 = a.reqLatency[int(math.Ceil(float64(l)*0.99)-1)]
 		r.window.reqLatencyMin = a.reqLatency[0]
-		r.window.reqLatencyMax = a.reqLatency[l - 1]
+		r.window.reqLatencyMax = a.reqLatency[l-1]
 		s := 0.0
 		for _, v := range a.reqLatency {
 			s += v
@@ -187,12 +187,12 @@ func calculateStats(begin time.Time, end time.Time, a *Accum, r *Result) {
 	// calc total percentile
 	if l := len(a.reqLatencyAll); l > 0 {
 		sort.Float64s(a.reqLatencyAll)
-		r.total.reqLatencyP10 = a.reqLatencyAll[int(math.Ceil(float64(l) * 0.1) - 1)]
-		r.total.reqLatencyP50 = a.reqLatencyAll[int(math.Ceil(float64(l) * 0.5) - 1)]
-		r.total.reqLatencyP90 = a.reqLatencyAll[int(math.Ceil(float64(l) * 0.9) - 1)]
-		r.total.reqLatencyP99 = a.reqLatencyAll[int(math.Ceil(float64(l) * 0.99) - 1)]
+		r.total.reqLatencyP10 = a.reqLatencyAll[int(math.Ceil(float64(l)*0.1)-1)]
+		r.total.reqLatencyP50 = a.reqLatencyAll[int(math.Ceil(float64(l)*0.5)-1)]
+		r.total.reqLatencyP90 = a.reqLatencyAll[int(math.Ceil(float64(l)*0.9)-1)]
+		r.total.reqLatencyP99 = a.reqLatencyAll[int(math.Ceil(float64(l)*0.99)-1)]
 		r.total.reqLatencyMin = a.reqLatencyAll[0]
-		r.total.reqLatencyMax = a.reqLatencyAll[l - 1]
+		r.total.reqLatencyMax = a.reqLatencyAll[l-1]
 		s := 0.0
 		for _, v := range a.reqLatencyAll {
 			s += v
@@ -217,9 +217,9 @@ func calculateStats(begin time.Time, end time.Time, a *Accum, r *Result) {
 	// time
 	r.window.beginTime = begin
 	r.window.endTime = end
-	r.window.durationSec = float64(end.UnixNano() - begin.UnixNano()) / float64(1000 * 1000 * 1000)
+	r.window.durationSec = float64(end.UnixNano()-begin.UnixNano()) / float64(1000*1000*1000)
 	r.total.endTime = end
-	r.total.durationSec = float64(end.UnixNano() - r.total.beginTime.UnixNano()) / float64(1000 * 1000 * 1000)
+	r.total.durationSec = float64(end.UnixNano()-r.total.beginTime.UnixNano()) / float64(1000*1000*1000)
 
 	// init accum
 	a.reset()
@@ -263,18 +263,18 @@ func printStats(s Stats) {
 		"Ave[ms]",
 	}
 	column := strings.Join(columns, "\t")
-	fmt.Fprint(tables, column + "\n")
+	fmt.Fprint(tables, column+"\n")
 	fmt.Fprintf(tables,
 		"%s\t%s\t%6.1f\t%s\t%d\t%s\t%s\t%s\t%s\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\n",
 		s.beginTime.Format("15:04:05"),
 		s.endTime.Format("15:04:05"),
 		s.durationSec,
-		fmt.Sprintf("%d(%.2f/sec)", s.successCount, float64(s.successCount) / s.durationSec),
+		fmt.Sprintf("%d(%.2f/sec)", s.successCount, float64(s.successCount)/s.durationSec),
 		s.errorCount,
-		fmt.Sprintf("%d(%4.1f)", s.status2xxCount, float64(s.status2xxCount) / float64(s.successCount) * 100),
-		fmt.Sprintf("%d(%4.1f)", s.status3xxCount, float64(s.status3xxCount) / float64(s.successCount) * 100),
-		fmt.Sprintf("%d(%4.1f)", s.status4xxCount, float64(s.status4xxCount) / float64(s.successCount) * 100),
-		fmt.Sprintf("%d(%4.1f)", s.status5xxCount, float64(s.status5xxCount) / float64(s.successCount) * 100),
+		fmt.Sprintf("%d(%4.1f)", s.status2xxCount, float64(s.status2xxCount)/float64(s.successCount)*100),
+		fmt.Sprintf("%d(%4.1f)", s.status3xxCount, float64(s.status3xxCount)/float64(s.successCount)*100),
+		fmt.Sprintf("%d(%4.1f)", s.status4xxCount, float64(s.status4xxCount)/float64(s.successCount)*100),
+		fmt.Sprintf("%d(%4.1f)", s.status5xxCount, float64(s.status5xxCount)/float64(s.successCount)*100),
 		s.reqLatencyMin,
 		s.reqLatencyP10,
 		s.reqLatencyP50,
