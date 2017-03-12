@@ -30,7 +30,6 @@ func (p Parser) readAndParse(ctx context.Context, q chan string, logCh chan stri
 		case <-ctx.Done():
 			return true
 		default:
-			// time.Sleep(5 * time.Millisecond)
 			c += 1
 			s := scanner.Text()
 			var js interface{}
