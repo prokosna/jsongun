@@ -18,6 +18,7 @@ type FireCommand struct {
 	Uri          string
 	NumShooter   int
 	Repeat       int
+	Sleep        int
 }
 
 type arrayFlags []string
@@ -40,6 +41,8 @@ func (c *FireCommand) Run(args []string) int {
 		numShooterDesc    = "The number of threads to request"
 		repeatDefault     = 1
 		repeatDesc        = "The number of iteration for one file"
+		sleepDefault      = 0
+		sleepDesc         = "Interval time between requests"
 	)
 	cmdFlags := flag.NewFlagSet("fire", flag.ContinueOnError)
 	cmdFlags.Usage = func() {
@@ -53,6 +56,8 @@ func (c *FireCommand) Run(args []string) int {
 	cmdFlags.IntVar(&c.NumShooter, "n", numShooterDefault, numShooterDesc)
 	cmdFlags.IntVar(&c.Repeat, "repeat", repeatDefault, repeatDesc)
 	cmdFlags.IntVar(&c.Repeat, "r", repeatDefault, repeatDesc)
+	cmdFlags.IntVar(&c.Sleep, "sleep", sleepDefault, sleepDesc)
+	cmdFlags.IntVar(&c.Sleep, "s", sleepDefault, sleepDesc)
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
 	}
@@ -65,6 +70,7 @@ func (c *FireCommand) Run(args []string) int {
 		c.Ui.Error("Please provide at least one file includes JSON with --file option.")
 		return 1
 	}
+
 	if c.Uri == uriDefault {
 		a, err := c.Ui.Ask("Default target 'http://localhost:8081/' will be used. OK? [y/n]")
 		if strings.ToLower(a) == "n" || err != nil {
@@ -77,6 +83,7 @@ func (c *FireCommand) Run(args []string) int {
 	for i, filePath := range c.FilePathList {
 		parsers[i] = lib.Parser{FilePath: filePath}
 	}
+
 	shot, err := lib.NewShot(c.Uri)
 	if err != nil {
 		c.Ui.Error(err.Error())
@@ -85,9 +92,9 @@ func (c *FireCommand) Run(args []string) int {
 
 	// TODO: implement cancel
 	ctx, _ := context.WithCancel(context.Background())
-	jsonCh := make(chan string, 16)
-	metCh := make(chan lib.Metrics, 16)
-	logCh := make(chan string, 16)
+	jsonCh := make(chan string, c.NumShooter*3)
+	metCh := make(chan lib.Metrics, c.NumShooter*3)
+	logCh := make(chan string, c.NumShooter)
 
 	logCh <- "INFO: Start shooting..."
 
@@ -106,7 +113,7 @@ func (c *FireCommand) Run(args []string) int {
 	var wwg sync.WaitGroup
 	for i := 0; i < c.NumShooter; i++ {
 		wwg.Add(1)
-		go shot.Shoot(&wwg, jsonCh, metCh, logCh)
+		go shot.Shoot(&wwg, jsonCh, metCh, logCh, c.Sleep)
 	}
 	go func() {
 		wwg.Wait()

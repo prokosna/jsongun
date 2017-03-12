@@ -15,12 +15,12 @@ type Parser struct {
 	FilePath   string
 }
 
-func (p *Parser) readAndParse(ctx context.Context, q chan string, logCh chan string) bool {
+func (p Parser) readAndParse(ctx context.Context, q chan string, logCh chan string) bool {
 	fp, err := os.Open(p.FilePath)
 	if err != nil {
 		p.ErrorCount = -1
 		logCh <- fmt.Sprintf("ERROR: Cannot open %s", p.FilePath)
-		return false
+		return true
 	}
 	defer fp.Close()
 	scanner := bufio.NewScanner(fp)
@@ -51,7 +51,7 @@ func (p *Parser) readAndParse(ctx context.Context, q chan string, logCh chan str
 	return false
 }
 
-func (p *Parser) FetchJsonFromFile(ctx context.Context, wg *sync.WaitGroup, q chan string, logCh chan string, r int) {
+func (p Parser) FetchJsonFromFile(ctx context.Context, wg *sync.WaitGroup, q chan string, logCh chan string, r int) {
 	defer wg.Done()
 	for i := 0; i < r; i++ {
 		canceled := p.readAndParse(ctx, q, logCh)

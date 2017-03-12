@@ -20,5 +20,3 @@
 *.iml
 test*.json
 *.lock
-
-/bin

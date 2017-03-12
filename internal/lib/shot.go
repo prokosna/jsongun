@@ -76,7 +76,7 @@ func (t *Shot) request(body string) (met Metrics, err error) {
 	return
 }
 
-func (t *Shot) Shoot(wg *sync.WaitGroup, jsonCh chan string, metCh chan Metrics, logCh chan string) {
+func (t *Shot) Shoot(wg *sync.WaitGroup, jsonCh chan string, metCh chan Metrics, logCh chan string, sleep int) {
 	defer wg.Done()
 	for body := range jsonCh {
 		met, err := t.request(body)
@@ -84,5 +84,6 @@ func (t *Shot) Shoot(wg *sync.WaitGroup, jsonCh chan string, metCh chan Metrics,
 			logCh <- fmt.Sprintf("ERROR: %s", err)
 		}
 		metCh <- met
+		time.Sleep(time.Duration(sleep) * time.Millisecond)
 	}
 }
