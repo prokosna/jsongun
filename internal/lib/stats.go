@@ -62,7 +62,7 @@ func (a *Accum) reset() {
 	a.reqLatency = nil
 }
 
-func CalcOutputStats(wg *sync.WaitGroup, metCh chan Metrics, logCh chan string) {
+func CalcOutputStats(wg *sync.WaitGroup, flushRate int, metCh chan Metrics, logCh chan string) {
 	defer wg.Done()
 
 	a := &Accum{}
@@ -81,7 +81,7 @@ func CalcOutputStats(wg *sync.WaitGroup, metCh chan Metrics, logCh chan string) 
 		done <- true
 	}()
 
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(time.Duration(flushRate) * time.Millisecond)
 	quit := make(chan bool)
 	go func() {
 		for {
@@ -243,8 +243,8 @@ func printLogo() {
 }
 
 func printStats(s Stats) {
-	tables := goterm.NewTable(0, 15, 2, ' ', 0)
-	columns := []string{
+	upperTable := goterm.NewTable(0, 15, 2, ' ', 0)
+	upperColumns := []string{
 		"From",
 		"To",
 		"Duration[s]",
@@ -254,18 +254,11 @@ func printStats(s Stats) {
 		"3xx(R[%])",
 		"4xx(R[%])",
 		"5xx(R[%])",
-		"Min[ms]",
-		"P10[ms]",
-		"P50[ms]",
-		"P90[ms]",
-		"P99[ms]",
-		"Max[ms]",
-		"Ave[ms]",
 	}
-	column := strings.Join(columns, "\t")
-	fmt.Fprint(tables, column+"\n")
-	fmt.Fprintf(tables,
-		"%s\t%s\t%6.1f\t%s\t%d\t%s\t%s\t%s\t%s\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\n",
+	upperColumn := strings.Join(upperColumns, "\t")
+	fmt.Fprint(upperTable, upperColumn+"\n")
+	fmt.Fprintf(upperTable,
+		"%s\t%s\t%6.1f\t%s\t%d\t%s\t%s\t%s\t%s\n",
 		s.beginTime.Format("15:04:05"),
 		s.endTime.Format("15:04:05"),
 		s.durationSec,
@@ -274,7 +267,23 @@ func printStats(s Stats) {
 		fmt.Sprintf("%d(%4.1f)", s.status2xxCount, float64(s.status2xxCount)/float64(s.successCount)*100),
 		fmt.Sprintf("%d(%4.1f)", s.status3xxCount, float64(s.status3xxCount)/float64(s.successCount)*100),
 		fmt.Sprintf("%d(%4.1f)", s.status4xxCount, float64(s.status4xxCount)/float64(s.successCount)*100),
-		fmt.Sprintf("%d(%4.1f)", s.status5xxCount, float64(s.status5xxCount)/float64(s.successCount)*100),
+		fmt.Sprintf("%d(%4.1f)", s.status5xxCount, float64(s.status5xxCount)/float64(s.successCount)*100))
+	goterm.Print(upperTable)
+	goterm.Println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
+	lowerTable := goterm.NewTable(0, 15, 2, ' ', 0)
+	lowerColumns := []string{
+		"Min[ms]",
+		"P10[ms]",
+		"P50[ms]",
+		"P90[ms]",
+		"P99[ms]",
+		"Max[ms]",
+		"Ave[ms]",
+	}
+	lowerColumn := strings.Join(lowerColumns, "\t")
+	fmt.Fprint(lowerTable, lowerColumn+"\n")
+	fmt.Fprintf(lowerTable,
+		"%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\t%6.3f\n",
 		s.reqLatencyMin,
 		s.reqLatencyP10,
 		s.reqLatencyP50,
@@ -282,14 +291,14 @@ func printStats(s Stats) {
 		s.reqLatencyP99,
 		s.reqLatencyMax,
 		s.reqLatencyAve)
-	goterm.Print(tables)
+	goterm.Print(lowerTable)
 }
 
 func printTotal(r *Result) {
 	//box := goterm.NewBox(20, 3, 0)
 	//fmt.Fprint(box, "TOTAL")
 	//goterm.Println(box.String())
-	goterm.Println("----TOTAL----")
+	goterm.Println("---------------------------TOTAL---------------------------")
 	r.mux.RLock()
 	defer r.mux.RUnlock()
 	printStats(r.total)
@@ -299,7 +308,7 @@ func printWindow(r *Result) {
 	//box := goterm.NewBox(20, 3, 0)
 	//fmt.Fprint(box, "CURRENT")
 	//goterm.Println(box.String())
-	goterm.Println("----CURRENT----")
+	goterm.Println("--------------------------CURRENT--------------------------")
 	r.mux.RLock()
 	defer r.mux.RUnlock()
 	printStats(r.window)
@@ -309,7 +318,7 @@ func printLogs(a *Accum) {
 	//box := goterm.NewBox(20, 3, 0)
 	//fmt.Fprint(box, "LOGS")
 	//goterm.Println(box.String())
-	goterm.Println("----LOGS----")
+	goterm.Println("----------------------------LOGS---------------------------")
 	a.mux.RLock()
 	defer a.mux.RUnlock()
 	for _, log := range a.logs {
